@@ -1,30 +1,45 @@
-"# springboot-Deploy-on-AWS-EC2-SSh" 
-1️⃣ Launch EC2 instance
-•	OS: Amazon Linux 2023
-•	Type: t2.micro (or your choice)
-•	Create/download key pair (mykey.pem)
-•	Enable Auto-assign public IP
-•	Configure security group:
-o	Allow SSH (port 22) — from your IP / 0.0.0.0/0
-o	Allow Custom TCP (port 8080) — from 0.0.0.0/0 (for app access)
+1️⃣ Create Your Spring Boot App
+		a)mvn clean package
 
-2️⃣ Connect to EC2 via SSH
-	ssh -i /c/Users/LENOVO/Desktop/Learn/mykey.pem ec2-user@3.111.196.244
-3️⃣ Install Java
+		b)create Dockerfile
+2️⃣ Create Docker Image
+	
+		docker build -t springboot-myeks2 .
+3️⃣ Create ECR Repository(as your region)
 
-sudo yum update -y
-sudo dnf install java-17-amazon-corretto -y
-java -version
+		aws ecr create-repository --repository-name springboot-myeks2 --region us-east-2.
+
+This gives you a URI like:165220828221.dkr.ecr.us-east-2.amazonaws.com/springboot-myeks2
+
+4️⃣ Login to ECR
+
+		aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 165220828221.dkr.ecr.us-east-2.amazonaws.com
+
+5️⃣ Tag & Push Docker Image to ECR
+
+		docker tag springboot-myeks2:latest 165220828221.dkr.ecr.us-east-2.amazonaws.com/springboot-myeks2:latest
+
+		docker push 165220828221.dkr.ecr.us-east-2.amazonaws.com/springboot-myeks2:latest
+6️⃣ Create EKS Cluster
+		
+		eksctl create cluster --name jt-cluster --version 1.28 --nodes=1 --node-type t2.small --region us-east-2 --with-oidc
+
+7️⃣ Update Kubeconfig
+		
+ 		aws eks --region us-east-2 update-kubeconfig --name jt-cluster
+
+		kubectl get nodes
+8️⃣ Deploy Your App on EKS
+Create Kubernetes Deployment YAML 
+Create Service YAML 
+
+		kubectl apply -f springboot-deployment.yaml
+		kubectl apply -f springboot-service.yaml
+
+9️⃣ Verify
+		kubectl get pods
+		kubectl get svc springboot-service
+
+u will get EXTERNAL-IP. Open the EXTERNAL-IP in your browser to access your app!
 
 
-4️⃣ Build your Spring Boot JAR locally
-mvn clean package
-
-
-5️⃣ Copy JAR to EC2
-scp -i /c/Users/LENOVO/Desktop/Learn/mykey.pem /d/Practice/SpringBootEks/target/springboot-eks.jar ec2-user@3.111.196.244:/home/ec2-user/
-
-6️⃣ Run your app
-On EC2
-java -jar springboot-eks.jar
-"# springboot-Deploy-on-EKS" 
