@@ -27,3 +27,4 @@ scp -i /c/Users/LENOVO/Desktop/Learn/mykey.pem /d/Practice/SpringBootEks/target/
 6️⃣ Run your app
 On EC2
 java -jar springboot-eks.jar
+"# springboot-Deploy-on-EKS" 
